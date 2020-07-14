@@ -13,18 +13,22 @@ export interface Deferred<T> {
     reject(err: Error): void;
 }
 
-export let enableLog = true;
+let _enableLog = true;
+
+export function enableLog(enable: boolean): void {
+    _enableLog = enable;
+}
 
 export function log(...args: any[]): void;
 export function log(): void {
-    if (enableLog) {
+    if (_enableLog) {
         console.log.apply(console, <any>arguments);
     }
 }
 
 export function error(...args: any[]): void;
 export function error(): void {
-    if (enableLog) {
+    if (_enableLog) {
         console.error.apply(console, <any>arguments);
     }
 }
