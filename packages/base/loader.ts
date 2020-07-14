@@ -93,7 +93,7 @@ function importAMD(module: string): Promise<any> {
 function importCommonJS(module: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         try {
-            resolve(require(module));
+            resolve(require(module)); // eslint-disable-line
         }
         catch (e) {
             reject(e);

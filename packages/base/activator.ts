@@ -84,7 +84,7 @@ type UnPromise<T> = T extends Promise<infer R> ? R : T;
 type Promised<T> = Promise<UnPromise<T>>;
 type MethodNames<T> = { [K in keyof T]: Required<T>[K] extends (...args: any[]) => any ? K : never; }[keyof T];
 
-export function call<T extends {}, U extends MethodNames<T>>(vm: T, key: U, ...args: Parameters<T[U]>): Promised<ReturnType<T[U]> | null> {
+export function call<T extends Record<string, any>, U extends MethodNames<T>>(vm: T, key: U, ...args: Parameters<T[U]>): Promised<ReturnType<T[U]> | null> {
     try {
         if (typeof vm[key] !== "function") {
             return Promise.resolve(null);
@@ -100,23 +100,16 @@ export function call<T extends {}, U extends MethodNames<T>>(vm: T, key: U, ...a
 export function createActivateObservable<T extends ViewModel | null | undefined>(): ActivateObservable<T>;
 export function createActivateObservable<T extends ViewModel | null | undefined>(config: ActivateObservableOptions): ActivateObservable<T>;
 export function createActivateObservable<T extends ViewModel | null | undefined>(target: ko.Observable<T>, config?: ActivateObservableOptions): ActivateObservable<T>;
-export function createActivateObservable<T extends ViewModel | null | undefined>(target?: any, config?: ActivateObservableOptions): ActivateObservable<T> {
-    if (!config && !ko.isWriteableObservable(target)) {
-        config = target;
-        target = null;
-    }
-
-    target = target || ko.observable<T>();
-    config = config || {};
-
+export function createActivateObservable<T extends ViewModel | null | undefined>(target?: ko.Observable<T> | ActivateObservableOptions, config?: ActivateObservableOptions): ActivateObservable<T> {
+    const opts = ensureArgs(target, config);
     let prom = Promise.resolve<any>(null);
 
     const result = system.extend(
         ko.computed<any>({
-            read: target,
+            read: opts.target,
             write: (val) => {
                 const
-                    old = target(),
+                    old = opts.target(),
                     args = getArgs(result.args);
 
                 prom = loadModule<T>(val)
@@ -125,7 +118,7 @@ export function createActivateObservable<T extends ViewModel | null | undefined>
                             .then(() => activate(vm, args))
                     )
                     .then(vm => {
-                        target(vm);
+                        opts.target(vm as T);
                         return vm;
                     })
                     .catch(err => {
@@ -141,8 +134,8 @@ export function createActivateObservable<T extends ViewModel | null | undefined>
             then: (onSuccess: (res: any) => void, onError: (reason: any) => void) => prom.then(onSuccess, onError),
             catch: (onError: (reason: any) => void) => prom.catch(onError),
 
-            args: config.args || [],
-            onError: config.onError || (err => {
+            args: opts.config.args || [],
+            onError: opts.config.onError || (err => {
                 system.error("activator>", err);
                 throw err;
             })
@@ -164,6 +157,18 @@ function loadModule<T>(mod: string | T): Promise<T> {
 
 function getArgs(args: any): any[] {
     return typeof args === "function" ? args() : args;
+}
+
+function ensureArgs<T>(target?: ko.Observable<T> | ActivateObservableOptions, config?: ActivateObservableOptions): { target: ko.Observable<T>, config: ActivateObservableOptions } {
+    if (!config && !ko.isWriteableObservable(target)) {
+        config = target;
+        target = undefined;
+    }
+
+    return {
+        target: (target as ko.Observable<T> | undefined) || ko.observable<any>(),
+        config: config || {}
+    };
 }
 
 function isConstructor(obj: any): obj is ViewModelConstructor {

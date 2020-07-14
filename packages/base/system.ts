@@ -4,7 +4,7 @@ export interface Extend {
     <T, U>(target: T, source: U): T & U;
     <T, U, V>(target: T, source1: U, source2: V): T & U & V;
     <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
-    (target: object, ...sources: any[]): any;
+    (target: Record<string, unknown>, ...sources: any[]): any;
 }
 
 export interface Deferred<T> {
@@ -19,17 +19,15 @@ export function enableLog(enable: boolean): void {
     _enableLog = enable;
 }
 
-export function log(...args: any[]): void;
-export function log(): void {
+export function log(...args: any[]): void {
     if (_enableLog) {
-        console.log.apply(console, <any>arguments);
+        console.log(...args);
     }
 }
 
-export function error(...args: any[]): void;
-export function error(): void {
+export function error(...args: any[]): void {
     if (_enableLog) {
-        console.error.apply(console, <any>arguments);
+        console.error(...args);
     }
 }
 
@@ -43,20 +41,21 @@ export const extend = (function (Obj: any) {
             throw new Error("Please specify a target object");
         }
 
-        var T = Object(target),
-            l = arguments.length,
-            i = 1, S;
-
-        function assignKey(this: any, key: string): void {
-            T[key] = this[key];
-        }
+        const T = Object(target);
+        const l = arguments.length;
+        let i = 1;
+        let S: Record<string, unknown>;
 
         while (l > i) {
-            S = Object(arguments[i++]);
+            S = Object(arguments[i++]); // eslint-disable-line
             Object.keys(S).forEach(assignKey, S);
         }
 
         return T;
+
+        function assignKey(this: any, key: string): void {
+            T[key] = this[key];
+        }
     };
 })(Object) as Extend;
 
@@ -65,7 +64,7 @@ export function module<T>(name: string): Promise<T>;
 export function module<T>(names: string[]): Promise<T[]>;
 export function module<T>(...names: string[]): Promise<T[]>;
 export function module<T>(): Promise<T | T[] | null> {
-    let args = Array.prototype.slice.call(arguments);
+    let args = Array.prototype.slice.call(arguments); // eslint-disable-line
     if (args.length === 0) {
         return Promise.resolve(null);
     }
