@@ -5,7 +5,7 @@
 *.css
 *.d.ts
 !*.config.js
-!references.d.ts
+!_references.d.ts
 
 # Dependencies
 node_modules/

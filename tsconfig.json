@@ -3,9 +3,15 @@
         "target": "ES5",
         "module": "UMD",
         "moduleResolution": "Node",
+        "lib": [
+            "ES5",
+            "DOM",
+            "ES2015.Promise"
+        ],
         "strict": true,
         "declaration": true,
-        "sourceMap": false
+        "sourceMap": false,
+        "types": []
     },
     "exclude": [
         "node_modules"
