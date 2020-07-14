@@ -1,0 +1,15 @@
+# Development Javascript
+*.tmp
+*.js
+*.map
+*.css
+*.d.ts
+!*.config.js
+!references.d.ts
+
+# Dependencies
+node_modules/
+
+# Temp files
+*.tmp
+*.log

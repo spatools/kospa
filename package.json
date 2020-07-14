@@ -1,0 +1,23 @@
+{
+  "name": "kospa-monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo for the kospa framework",
+  "author": "Touchify (dev@touchify.co)",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spatools/kospa.git"
+  },
+  "devDependencies": {
+    "lerna": "^3.22.1",
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
+    "husky": "^4.2.5"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  }
+}

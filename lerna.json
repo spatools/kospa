@@ -1,0 +1,21 @@
+{
+  "version": "independent",
+  "packages": [
+    "packages/*"
+  ],
+  "command": {
+    "version": {
+      "allowBranch": "master",
+      "conventionalCommits": true,
+      "message": "chore(release): publish",
+      "ignoreChanges": [
+        "**/*.md",
+        "**/LICENSE",
+        "**/tests/**"
+      ]
+    },
+    "bootstrap": {
+      "hoist": "**"
+    }
+  }
+}
