@@ -1,4 +1,5 @@
 ﻿import * as ko from "knockout";
+import * as loader from "./loader";
 import * as system from "./system";
 
 export interface ActivateObservableOptions {
@@ -24,7 +25,11 @@ export interface ViewModel {
 
     activate?(...args: any[]): void | Promise<any>;
     deactivate?(closing?: boolean): void | Promise<any>;
+
     bindingComplete?(node: Node, ...args: any[]): void | Promise<any>;
+    descendantsComplete?(node: Node, ...args: any[]): void | Promise<any>;
+    compositionComplete?(...args: any[]): void | Promise<any>;
+    dispose(): void | Promise<any>;
 
     getView?(...args: any[]): View;
 }
@@ -49,51 +54,43 @@ export function activate(VmModule: ViewModelOrConstructor, args?: any[]): Promis
 export function activate(VmModule: ViewModelOrConstructor | null | undefined, args?: any[]): Promise<ViewModel | null | undefined>;
 export function activate(VmModule: ViewModelOrConstructor | null | undefined, args?: any[]): Promise<ViewModel | null | undefined> {
     const vm = constructs(VmModule);
-    if (!vm || vm.activated || typeof vm.activate !== "function") {
+    if (!vm || vm.activated) {
         return Promise.resolve(vm);
     }
 
-    try {
-        return Promise.resolve(vm.activate.apply(vm, args || [])).then(() => {
+    return call(vm, "activate", ...(args || []))
+        .then(() => {
             vm.activated = true;
             return vm;
         });
-    }
-    catch (err) {
-        return Promise.reject(err);
-    }
 }
 
 export function deactivate(vm: null | undefined, newVm?: ViewModel | null | undefined): Promise<null | undefined>;
 export function deactivate(vm: ViewModel, newVm?: ViewModel | null | undefined): Promise<ViewModel | null | undefined>;
 export function deactivate(vm: ViewModel | null | undefined, newVm?: ViewModel | null | undefined): Promise<ViewModel | null | undefined>;
 export function deactivate(vm: ViewModel | null | undefined, newVm?: ViewModel | null | undefined): Promise<ViewModel | null | undefined> {
-    if (!vm || !vm.activated || typeof vm.deactivate !== "function") {
+    if (!vm || !vm.activated) {
         return Promise.resolve(vm);
     }
 
-    try {
-        return Promise.resolve(vm.deactivate.call(vm, newVm !== vm)).then(() => {
+    return call(vm, "deactivate", newVm !== vm)
+        .then(() => {
             vm.activated = false;
             return vm;
         });
-    }
-    catch (err) {
-        return Promise.reject(err);
-    }
 }
 
-export function bindingComplete(node: Node, vm: null | undefined, args?: any[]): Promise<null | undefined>;
-export function bindingComplete(node: Node, vm: ViewModel, args?: any[]): Promise<ViewModel>;
-export function bindingComplete(node: Node, vm: ViewModel | null | undefined, args?: any[]): Promise<ViewModel | null | undefined>;
-export function bindingComplete(node: Node, vm: ViewModel | null | undefined, args?: any[]): Promise<ViewModel | null | undefined> {
-    if (!vm || typeof vm.bindingComplete !== "function") {
-        return Promise.resolve(vm);
-    }
+type UnPromise<T> = T extends Promise<infer R> ? R : T;
+type Promised<T> = Promise<UnPromise<T>>;
+type MethodNames<T> = { [K in keyof T]: Required<T>[K] extends (...args: any[]) => any ? K : never; }[keyof T];
 
+export function call<T extends {}, U extends MethodNames<T>>(vm: T, key: U, ...args: Parameters<T[U]>): Promised<ReturnType<T[U]> | null> {
     try {
-        return Promise.resolve(vm.bindingComplete.apply(vm, <any>[node].concat(args || [])))
-            .then(() => vm);
+        if (typeof vm[key] !== "function") {
+            return Promise.resolve(null);
+        }
+
+        return Promise.resolve(vm[key](...args));
     }
     catch (err) {
         return Promise.reject(err);
@@ -161,7 +158,7 @@ ko.extenders["activate"] = (target: ko.Observable<any>, config?: ActivateObserva
 
 function loadModule<T>(mod: string | T): Promise<T> {
     return typeof mod === "string" ?
-        system.module<T>(mod) :
+        loader.loadModule<T>(mod) :
         Promise.resolve<T>(mod);
 }
 
