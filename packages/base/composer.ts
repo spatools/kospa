@@ -1,4 +1,5 @@
 ﻿import * as ko from "knockout";
+import * as loader from "./loader";
 import * as system from "./system";
 import * as activator from "./activator";
 
@@ -13,9 +14,13 @@ const VIEW_CACHE = {} as Record<string, Node[]>;
 
 export interface CompositionOptions {
     viewmodel: string | ViewModelOrConstructor;
-    view: View;
+    view?: View | null;
     args?: any[];
     activate?: boolean;
+
+    bindingComplete?(node: Node, vm: ViewModel, ...args: any[]): void | Promise<any>;
+    descendantsComplete?(node: Node, vm: ViewModel, ...args: any[]): void | Promise<any>;
+    compositionComplete?(vm: ViewModel, ...args: any[]): void | Promise<any>;
 }
 
 export class CompositionError extends Error {
@@ -81,6 +86,9 @@ ko.components.register("kospa-compose", { template: `<!--ko compose: $data--><!-
 //#region Loading Methods
 
 function loadComponents(options: CompositionOptions): Promise<CompositionLoadedOptions> {
+    if (typeof options.viewmodel === "string" && !options.view) {
+        options.view = options.viewmodel;
+    }
 
     return loadViewModel(options.viewmodel)
         .then(vm => {
@@ -97,11 +105,11 @@ function loadComponents(options: CompositionOptions): Promise<CompositionLoadedO
 
 function loadViewModel(viewmodel: string | ViewModelOrConstructor): Promise<ViewModelOrConstructor> {
     return typeof viewmodel === "string" ?
-        system.module<ViewModelOrConstructor>(viewmodel) :
+        loader.loadModule<ViewModelOrConstructor>(viewmodel) :
         Promise.resolve(viewmodel);
 }
 
-function loadView(view: View, vm: ViewModelOrConstructor, args?: any[]): Promise<Node[]> {
+function loadView(view: View | undefined | null, vm: ViewModelOrConstructor, args?: any[]): Promise<Node[]> {
     if (vm && typeof vm.getView === "function") {
         view = vm.getView(...(args || [])) || view;
     }
@@ -120,7 +128,7 @@ function parseView(view: View): Promise<Node[]> {
         }
 
         if (view.indexOf("<") === -1) {
-            return system.module<string>("text!" + view)
+            return loader.loadView(view)
                 .then(tpl => parseView(tpl))
                 .then(tpl => VIEW_CACHE[view] = tpl)
         }
@@ -147,7 +155,7 @@ function parseView(view: View): Promise<Node[]> {
 
 //#region Activation Methods
 
-function activation(node: Node, options: CompositionLoadedOptions): Promise<ViewModel> {
+function activation(node: Node, options: CompositionLoadedOptions): Promise<void> {
     if (!options.activate) {
         const
             oldVm = ko.utils.domData.get<ViewModel>(node, "kospa_vm"),
@@ -160,31 +168,50 @@ function activation(node: Node, options: CompositionLoadedOptions): Promise<View
         .then(oldVm => activateNode(node, oldVm, options));
 }
 
-function activateNode(node: Node, oldVm: ViewModel | null | undefined, options: CompositionLoadedOptions): Promise<ViewModel> {
+function activateNode(node: Node, oldVm: ViewModel | null | undefined, options: CompositionLoadedOptions): Promise<void> {
     return activator.activate(options.viewmodel, options.args)
         .then(vm => applyBindings(node, oldVm, vm, options));
 }
 
 function deactivateNode(node: Node, newVm: ViewModelOrConstructor): Promise<ViewModel | null | undefined> {
-    const oldVm = ko.utils.domData.get<ViewModel | null | undefined>(node, "kospa_vm");
-    return activator.deactivate(oldVm, newVm);
+    const oldVm = ko.utils.domData.get<ViewModel>(node, "kospa_vm");
+    return activator.deactivate(oldVm, newVm as ViewModel);
 }
 
 //#endregion
 
 //#region Binding Methods
 
-function applyBindings(node: Node, oldVm: ViewModel | null | undefined, vm: ViewModel, options: CompositionLoadedOptions): Promise<ViewModel> {
+function applyBindings(node: Node, oldVm: ViewModel | null | undefined, vm: ViewModel, options: CompositionLoadedOptions): Promise<void> {
     if (oldVm === vm) {
-        return Promise.resolve(vm);
+        return Promise.resolve();
+    }
+
+    if (!oldVm) {
+        ko.utils.domNodeDisposal.addDisposeCallback(node, dispose);
     }
 
     clean(node);
     moveNodes(options.view, node);
+
+    const sub = ko.bindingEvent.subscribe(node, "descendantsComplete", descendantsComplete.bind(null, node, vm, options), vm);
+    ko.utils.domData.set(node, "kospa_complete", sub);
+
     ko.applyBindingsToDescendants(vm, node);
     ko.utils.domData.set(node, "kospa_vm", vm);
 
-    return activator.bindingComplete(node, vm, options.args);
+    return bindingComplete(node, vm, options);
+}
+
+function dispose(node: Node): void {
+    const sub = ko.utils.domData.get<ko.Subscription>(node, "kospa_complete");
+    if (sub) sub.dispose();
+
+    const vm = ko.utils.domData.get<ViewModel>(node, "kospa_vm");
+    if (!vm) return;
+
+    activator.deactivate(vm);
+    activator.call(vm, "dispose");
 }
 
 function clean(node: Node): void {
@@ -210,6 +237,37 @@ function isDocumentFragment(obj: any): obj is DocumentFragment {
     return typeof DocumentFragment !== "undefined" ?
         obj instanceof DocumentFragment :
         obj && obj.nodeType === 11;
+}
+
+//#endregion
+
+//#region Callback Methods
+
+function descendantsComplete(node: Node, vm: ViewModel, options: CompositionOptions): Promise<void> {
+    const sub = ko.utils.domData.get<ko.Subscription>(node, "kospa_complete");
+    if (sub) sub.dispose();
+
+    const args = options.args || [];
+    return Promise.all([
+        activator.call(vm, "descendantsComplete", node, ...args),
+        activator.call(options, "descendantsComplete", node, vm, ...args)
+    ]).then(() => compositionComplete(vm, options));
+}
+
+function bindingComplete(node: Node, vm: ViewModel, options: CompositionOptions): Promise<void> {
+    const args = options.args || [];
+    return Promise.all([
+        activator.call(vm, "bindingComplete", node, ...args),
+        activator.call(options, "bindingComplete", node, vm, ...args)
+    ]).then(() => void 0);
+}
+
+function compositionComplete(vm: ViewModel, options: CompositionOptions): Promise<void> {
+    const args = options.args || [];
+    return Promise.all([
+        activator.call(vm, "compositionComplete", ...args),
+        activator.call(options, "compositionComplete", vm, ...args)
+    ]).then(() => void 0);
 }
 
 //#endregion
