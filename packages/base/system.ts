@@ -1,4 +1,6 @@
-﻿export interface Extend {
+﻿import * as loader from "./loader";
+
+export interface Extend {
     <T, U>(target: T, source: U): T & U;
     <T, U, V>(target: T, source1: U, source2: V): T & U & V;
     <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
@@ -59,27 +61,20 @@ export function module<T>(name: string): Promise<T>;
 export function module<T>(names: string[]): Promise<T[]>;
 export function module<T>(...names: string[]): Promise<T[]>;
 export function module<T>(): Promise<T | T[] | null> {
-    var args = Array.prototype.slice.call(arguments);
+    let args = Array.prototype.slice.call(arguments);
     if (args.length === 0) {
         return Promise.resolve(null);
     }
 
-    return new Promise<any>((resolve, reject) => {
-        if (args.length === 1 && Array.isArray(args[0])) {
-            args = args[0];
-        }
+    if (args.length === 1 && Array.isArray(args[0])) {
+        args = args[0];
+    }
 
-        try {
-            require(
-                args,
-                (...mods: any[]) => { resolve(mods.length === 1 ? mods[0] : mods); },
-                (err: Error) => { reject(err); }
-            );
-        }
-        catch (e) {
-            reject(e);
-        }
-    });
+    if (args.length === 1) {
+        return loader.loadModule(args[0]);
+    }
+
+    return Promise.all(args.map(loader.loadModule));
 }
 
 export function deferred(): Deferred<any>;
