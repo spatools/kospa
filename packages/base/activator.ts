@@ -29,7 +29,7 @@ export interface ViewModel {
     bindingComplete?(node: Node, ...args: any[]): void | Promise<any>;
     descendantsComplete?(node: Node, ...args: any[]): void | Promise<any>;
     compositionComplete?(...args: any[]): void | Promise<any>;
-    dispose(): void | Promise<any>;
+    dispose?(): void | Promise<any>;
 
     getView?(...args: any[]): View;
 }

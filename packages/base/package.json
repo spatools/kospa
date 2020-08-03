@@ -22,7 +22,7 @@
     "build:ts": "tsc -p .",
     "lint": "eslint --ext .ts --ignore-pattern \"*.d.ts\" *.ts",
     "test": "npm run clean && npm run lint && npm run test:jest",
-    "test:jest": "jest -c ../../jest.config.js --rootDir . --passWithNoTests",
+    "test:jest": "jest -c ../../jest.config.js --rootDir .",
     "clean": "npm run clean:ts",
     "clean:ts": "rimraf *.{js,d.ts} {lib}/**/*.{js,d.ts}",
     "prepublishOnly": "npm test && npm run build"
@@ -40,6 +40,7 @@
     "knockout": "^3.5.1"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.8",
     "@typescript-eslint/eslint-plugin": "^3.6.1",
     "@typescript-eslint/parser": "^3.6.1",
     "eslint": "^7.4.0",

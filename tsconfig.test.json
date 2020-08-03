@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES5",
-        "module": "UMD",
+        "module": "CommonJS",
         "moduleResolution": "Node",
         "lib": [
             "ES5",
@@ -9,12 +9,10 @@
             "ES2015.Promise"
         ],
         "strict": true,
-        "declaration": true,
-        "sourceMap": false,
-        "types": []
+        "declaration": false,
+        "sourceMap": false
     },
     "exclude": [
-        "node_modules",
-        "tests"
+        "node_modules"
     ]
 }
