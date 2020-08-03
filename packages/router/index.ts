@@ -32,7 +32,7 @@ export interface Routes {
 export type RouteHandler = (...args: any[]) => any;
 
 export class BaseRouter {
-    private static skip: boolean = false;
+    private static skip = false;
     private _current?: string;
     private timeout?: number;
     private _onError?: (err: any) => any;
@@ -66,7 +66,7 @@ export class BaseRouter {
     public use(path: string | RegExp, ...handlers: RouteHandler[]): BaseRouter;
     public use(): BaseRouter {
         const
-            config = createRouteConfig(arguments),
+            config = createRouteConfig(arguments), // eslint-disable-line
             routeId = config.matcher.toString(),
             route = this.routes[routeId];
 
@@ -84,7 +84,7 @@ export class BaseRouter {
     public unuse(path: string | RegExp, ...handlers: RouteHandler[]): BaseRouter;
     public unuse(): BaseRouter {
         const
-            config = createRouteConfig(arguments),
+            config = createRouteConfig(arguments),  // eslint-disable-line
             routeId = config.matcher.toString(),
             route = this.routes[routeId];
 
@@ -92,7 +92,7 @@ export class BaseRouter {
             let handler: RouteHandler | undefined,
                 index: number;
 
-            while (handler = config.handlers.pop()) {
+            while (handler = config.handlers.pop()) { // eslint-disable-line
                 index = route.handlers.indexOf(handler);
                 if (index !== -1) {
                     route.handlers.splice(index, 1);
@@ -129,32 +129,31 @@ export class BaseRouter {
     }
 
     public start(): BaseRouter {
-        let current = null as string | null | undefined,
-            self = this;
+        let current = null as string | null | undefined
 
-        this.stop();
-        delay();
+        const delay = (): void => {
+            this.timeout = setTimeout(handle, 50); // eslint-disable-line
+        };
 
-        function delay() {
-            self.timeout = setTimeout(handle, 50);
-        }
-
-        function handle() {
+        const handle = (): void => {
             if (BaseRouter.skip) {
                 BaseRouter.skip = false;
-                current = self._current;
+                current = this._current;
                 return delay();
             }
 
-            const f = self.getFragment();
+            const f = this.getFragment();
             if (current !== f) {
                 current = f;
-                self.handle(f).then(delay, delay);
+                this.handle(f).then(delay, delay);
             }
             else {
                 delay();
             }
-        }
+        };
+
+        this.stop();
+        delay();
 
         return this;
     }
@@ -251,7 +250,7 @@ export class BaseRouter {
         return null;
     }
 
-    protected onError(err: any) {
+    protected onError(err: Error): void {
         console.log("err", err);
         const onErr = this._onError || baseOnError;
         return onErr.call(this, err);
@@ -261,8 +260,8 @@ export class BaseRouter {
 //#region Private Methods
 
 function createRouteConfig(args: IArguments): Route & { matcher: RegExp } {
+    const arg = args[0];
     let i = 0,
-        arg = args[0],
         routeRegExp: RegExp;
 
     if (typeof arg === "function") {
@@ -289,7 +288,7 @@ function createRouteRegExp(route: string): RegExp {
     route = normalizeRoute(route)
         .replace(/\*/g, () => ".*")
         .replace(/\?/g, () => "\\?")
-        .replace(/\(([^\)]+)\)/g, (_, t1) => {
+        .replace(/\(([^)]+)\)/g, (_, t1) => {
             t1 = t1.replace(/:[a-zA-Z0-9]+/g, () => "([^\\/\\(\\)\\?]+?)");
             return `(?:${t1})?`;
         })
@@ -299,8 +298,9 @@ function createRouteRegExp(route: string): RegExp {
 }
 
 function executeHandlers(handlers: RouteHandler[], args: any[] = []): Promise<any> {
+    const len = handlers.length;
     let p = Promise.resolve(),
-        i = 0, len = handlers.length;
+        i = 0;
 
     for (; i < len; i++) {
         p = p.then(executeHandler.bind(null, handlers[i], args));
@@ -309,7 +309,7 @@ function executeHandlers(handlers: RouteHandler[], args: any[] = []): Promise<an
     return p;
 }
 function executeHandler(handler: RouteHandler, args: any[]): any {
-    return handler.apply(null, args);
+    return handler(...args);
 }
 
 function baseNotFound(): any {
@@ -432,11 +432,11 @@ const rootRouter = new Router();
 export default rootRouter;
 
 function createRouteHandler(self: Router, route: ViewModelRoute): () => PromiseLike<void> {
-    return function () {
+    return function (...args: any[]) {
         const oldRoute = self.currentRoute();
         self.currentRoute(route);
 
-        self.currentViewModel.args = slice.call(arguments);
+        self.currentViewModel.args = args;
         self.currentViewModel(route.viewmodel);
 
         return self.currentViewModel.then(
