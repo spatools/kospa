@@ -3,8 +3,13 @@ export type ViewLocator = (view: string) => string;
 export type ModuleLoader = (module: string) => Promise<any>;
 export type ViewLoader = (view: string) => Promise<string>;
 
+const define = (this as any).define;
+const req = (this as any).require;
+const module = (this as any).module;
+const System = (this as any).System;
+
 const IS_AMD = (typeof define === "function" && define.amd);
-const IS_COMMONJS = (typeof module === "object" && (module as any).exports);
+const IS_COMMONJS = (typeof module === "object" && module.exports);
 const IS_SYSTEMJS = (typeof System === "object" && typeof System.import === "function");
 
 export let moduleLocator: ModuleLocator = defaultModuleLocator;
@@ -78,7 +83,7 @@ function defaultViewLoader(view: string): Promise<string> {
 function importAMD(module: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         try {
-            require(
+            req(
                 [module],
                 (...mods: any[]) => { resolve(mods[0]); },
                 (err: Error) => { reject(err); }
@@ -93,7 +98,7 @@ function importAMD(module: string): Promise<any> {
 function importCommonJS(module: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         try {
-            resolve(require(module)); // eslint-disable-line
+            resolve(req(module)); // eslint-disable-line
         }
         catch (e) {
             reject(e);
