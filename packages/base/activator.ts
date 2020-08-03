@@ -176,7 +176,7 @@ function isConstructor(obj: any): obj is ViewModelConstructor {
 }
 
 declare module "knockout" {
-    interface Observable<T> {
+    interface SubscribableFunctions<T> {
         extend<S extends ViewModel | null | undefined>(requestedExtenders: ObservableExtenderOptions<T> & { activate: ActivateObservableOptions }): ActivateObservable<S>;
     }
 }
