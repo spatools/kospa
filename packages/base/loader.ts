@@ -42,11 +42,11 @@ function defaultModuleLocator(module: string): string {
 
 function defaultViewLocator(view: string): string {
     if (IS_AMD) {
-        return "text!" + view + (/\.html$/.test(view) ? "" : ".html");
+        return "text!" + addHTMLExtension(view);
     } else if (IS_COMMONJS) {
         return view;
     } else if (IS_SYSTEMJS) {
-        return view + (/\.html$/.test(view) ? "" : ".html") + "!text";
+        return addHTMLExtension(view) + "!text";
     } else {
         throw new TypeError("No import mecanism available!");
     }
@@ -103,4 +103,8 @@ function importCommonJS(module: string): Promise<any> {
 
 function importSystemJS(module: string): Promise<any> {
     return System.import(module);
+}
+
+function addHTMLExtension(path: string): string {
+    return path + (/\.html$/.test(path) ? "" : ".html");
 }
