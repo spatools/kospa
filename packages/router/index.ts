@@ -62,7 +62,18 @@ export class BaseRouter {
         }
     }
 
+    /**
+     * Add middlewares handlers for all routes.
+     * 
+     * @param handlers Middlewares to add on all routes
+     */
     public use(...handlers: RouteHandler[]): BaseRouter;
+    /**
+     * Add middlewares for all routes that match the given path prefix or regex.
+     * 
+     * @param path Path prefix or regex that enable the middlewares
+     * @param handlers Middlewares to add on given path prefix or regex
+     */
     public use(path: string | RegExp, ...handlers: RouteHandler[]): BaseRouter;
     public use(): BaseRouter {
         const
@@ -80,7 +91,18 @@ export class BaseRouter {
         return this;
     }
 
+    /**
+     * Remove middlewares from all routes.
+     * 
+     * @param handlers Middlewares to remove from all routes
+     */
     public unuse(...handlers: RouteHandler[]): BaseRouter;
+    /**
+     * Remove middlewares from all routes that match the given path prefix or regex.
+     * 
+     * @param path Path prefix or regex on which middlewares were registered
+     * @param handlers Middlewares to remove
+     */
     public unuse(path: string | RegExp, ...handlers: RouteHandler[]): BaseRouter;
     public unuse(): BaseRouter {
         const
@@ -107,15 +129,32 @@ export class BaseRouter {
         return this;
     }
 
+    /**
+     * Register handlers for given path.
+     * 
+     * @param path Path or regex
+     * @param handlers Handlers for the route
+     */
     public add(path: string | RegExp, ...handlers: RouteHandler[]): BaseRouter {
         const routeRegExp = typeof path === "string" ? createRouteRegExp(path) : path;
         return this.use(routeRegExp, ...handlers);
     }
+    /**
+     * Remove handlers from given path.
+     * 
+     * @param path Path or regex
+     * @param handlers Handlers to unregister
+     */
     public remove(path: string | RegExp, ...handlers: RouteHandler[]): BaseRouter {
         const routeRegExp = typeof path === "string" ? createRouteRegExp(path) : path;
         return this.unuse(routeRegExp, ...handlers);
     }
 
+    /**
+     * Register handlers that are executed when no route is found.
+     * 
+     * @param handlers Middlewares and route config to use when no route is found
+     */
     public none(...handlers: RouteHandler[]): BaseRouter {
         const route = this.routes.none;
         if (route.handlers[0] === baseNotFound) {
@@ -128,6 +167,7 @@ export class BaseRouter {
         return this;
     }
 
+    /** Start listening for URL changes. */
     public start(): BaseRouter {
         let current = null as string | null | undefined
 
@@ -157,11 +197,13 @@ export class BaseRouter {
 
         return this;
     }
+    /** Stop listening for route changes */
     public stop(): BaseRouter {
         clearInterval(this.timeout);
         return this;
     }
 
+    /** Stop and clear all configs. */
     public clear(): BaseRouter {
         this.stop();
         this.routes = {
@@ -173,8 +215,11 @@ export class BaseRouter {
         return this;
     }
 
-    public navigate(): BaseRouter;
-    public navigate(path: string): BaseRouter;
+    /**
+     * Navigate to the given path.
+     * 
+     * @param path Path to navigate to (/ if empty)
+     */
     public navigate(path?: string): BaseRouter {
         path = this.root + normalizeRoute(path);
         BaseRouter.skip = false;
@@ -189,9 +234,12 @@ export class BaseRouter {
         return this;
     }
 
-    public replace(): BaseRouter;
-    public replace(path: string): BaseRouter;
-    public replace(path: string, skipHandling: boolean): BaseRouter;
+    /**
+     * Replace the current path with the given one.
+     * 
+     * @param path Path to navigate to (/ if empty)
+     * @param skipHandling true to avoid handling the new path
+     */
     public replace(path?: string, skipHandling?: boolean): BaseRouter {
         path = this.root + normalizeRoute(path);
         BaseRouter.skip = skipHandling || false;
@@ -206,6 +254,11 @@ export class BaseRouter {
         return this;
     }
 
+    /**
+     * Manually handle the given route.
+     * 
+     * @param fragment Fragment to handle (current path if not specifed)
+     */
     public handle(fragment: string | null = this.getFragment()): Promise<BaseRouter> {
         if (fragment === null) {
             return Promise.resolve(this);
@@ -235,6 +288,7 @@ export class BaseRouter {
             });
     }
 
+    /** Get current fragment path. */
     public getFragment(): string | null {
         let fragment = this.mode === "history" ? location.pathname : location.hash;
         fragment = normalizeRoute(fragment);
@@ -250,6 +304,7 @@ export class BaseRouter {
         return null;
     }
 
+    /** Allows to override the error handling. */
     protected onError(err: Error): void {
         console.log("err", err);
         const onErr = this._onError || baseOnError;
@@ -356,6 +411,11 @@ export class Router extends BaseRouter {
         super(options);
     }
 
+    /**
+     * Configure a route for a ViewModel.
+     * 
+     * @param config Configuration to register
+     */
     public route(config: ViewModelRoute): Router {
         const
             handlerId = config.path.toString(),
@@ -372,6 +432,11 @@ export class Router extends BaseRouter {
 
         return this;
     }
+    /**
+     * Unregister a route for a ViewModel
+     * 
+     * @param config Configuration to remove
+     */
     public deroute(config: ViewModelRoute): Router {
         const
             handlerId = config.path.toString(),
@@ -384,11 +449,22 @@ export class Router extends BaseRouter {
 
         return this;
     }
+    /**
+     * Register a ViewModel when no handlers match the current route.
+     * 
+     * @param config Configuration for the not found handler
+     */
     public notFound(config: ViewModelRoute): Router {
         this.none(createRouteHandler(this, config));
         return this;
     }
 
+    /**
+     * Register a child router for the given prefix.
+     * 
+     * @param path Path prefix for the child router
+     * @param childRouter Child router
+     */
     public child(path: string, childRouter?: Router): Router {
         if (!childRouter) {
             childRouter = new Router({ mode: this.mode, root: path, onError: this.onError.bind(this) });
@@ -399,6 +475,7 @@ export class Router extends BaseRouter {
         return childRouter;
     }
 
+    /** Stop the router and clear all configs. */
     public clear(): Router {
         super.clear();
         this.routeHandlers = {};
@@ -408,6 +485,11 @@ export class Router extends BaseRouter {
         return this;
     }
 
+    /**
+     * Manually handle the given fragment.
+     * 
+     * @param fragment URL fragment to handle (current fragment if empty)
+     */
     public handle(fragment?: string): Promise<Router> {
         if (fragment === null) {
             return Promise.resolve(this);
