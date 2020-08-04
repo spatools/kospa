@@ -17,6 +17,9 @@
     "*.js",
     "*.d.ts"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "npm run clean && npm run lint && npm run build:ts",
     "build:ts": "tsc -p .",

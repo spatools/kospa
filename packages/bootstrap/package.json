@@ -13,6 +13,9 @@
   "bugs": {
     "url": "https://github.com/spatools/kospa/issues"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "*.js",
     "*.d.ts"
