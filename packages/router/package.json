@@ -1,6 +1,6 @@
 {
   "name": "@kospa/router",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Router component for kospa framework",
   "homepage": "https://github.com/spatools/kospa",
   "author": "Touchify (dev@touchify.co)",
@@ -40,7 +40,7 @@
     "app"
   ],
   "dependencies": {
-    "@kospa/base": "^0.1.7"
+    "@kospa/base": "^0.2.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.8",
