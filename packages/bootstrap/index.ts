@@ -8,6 +8,16 @@ export interface StartOptions extends composer.CompositionOptions {
     container?: string | Node;
 }
 
+/**
+ * Initialize given module and compose the global application container.
+ * 
+ * @param options Specify the composition options for the global application container.
+ * @param handlersOrModules Handlers or modules to initialize during startup:
+ *                          If a string: load module and initialize it (wait for Promise resolution ) ;
+ *                          If an object with a init function: run the init function and wait for Promise resolution  ;
+ *                          If a function: run the function and wait for Promise resolution ;
+ *                          If a Promise: wait for Promise resolution.
+ */
 export function start(options: StartOptions, ...handlersOrModules: Array<string | InitializeModule | InitializeHandler | PromiseLike<any>>): Promise<Node> {
 
     return system.asyncEach(handlersOrModules, handlerOrModule => {
