@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/spatools/kospa/compare/@kospa/base@0.2.0...@kospa/base@0.2.1) (2020-08-05)
+
+
+### Bug Fixes
+
+* **base:** this is amd is not window ([66411da](https://github.com/spatools/kospa/commit/66411da48e7ba0b629e1c9efaad22ebdf698d9e3))
+* **base:** use internal binding handler for composition ([787d50e](https://github.com/spatools/kospa/commit/787d50ec48e3f6af6baee6b3510d11354674367e))
+
+
+
+
+
 # 0.2.0 (2020-08-04)
 
 
