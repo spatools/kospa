@@ -161,7 +161,8 @@ function activation(node: Node, options: CompositionLoadedOptions): Promise<void
             oldVm = ko.utils.domData.get<ViewModel>(node, "kospa_vm"),
             vm = activator.constructs(options.viewmodel);
 
-        return applyBindings(node, oldVm, vm, options);
+        applyBindings(node, oldVm, vm, options);
+        return Promise.resolve();
     }
 
     return deactivateNode(node, options.viewmodel)
@@ -182,25 +183,38 @@ function deactivateNode(node: Node, newVm: ViewModelOrConstructor): Promise<View
 
 //#region Binding Methods
 
-function applyBindings(node: Node, oldVm: ViewModel | null | undefined, vm: ViewModel, options: CompositionLoadedOptions): Promise<void> {
-    if (oldVm === vm) {
-        return Promise.resolve();
+ko.bindingHandlers["internal_compose"] = {
+    init(node, valueAccessor, allBindings, vm, bindingContext) {
+        const { oldVm, options } = valueAccessor();
+
+        if (oldVm === vm) {
+            return { controlsDescendantBindings: true };
+        }
+
+        if (!oldVm) {
+            ko.utils.domNodeDisposal.addDisposeCallback(node, dispose);
+        }
+
+        clean(node);
+        moveNodes(options.view, node);
+
+        const ctx = ko.bindingEvent.startPossiblyAsyncContentBinding(node, bindingContext);
+
+        const sub = ko.bindingEvent.subscribe(node, "descendantsComplete", descendantsComplete.bind(null, node, vm, options), vm);
+        ko.utils.domData.set(node, "kospa_complete", sub);
+
+        ko.applyBindingsToDescendants(ctx, node);
+        ko.utils.domData.set(node, "kospa_vm", vm);
+
+        bindingComplete(node, vm, options);
+        return { controlsDescendantBindings: true };
     }
+};
 
-    if (!oldVm) {
-        ko.utils.domNodeDisposal.addDisposeCallback(node, dispose);
-    }
+ko.virtualElements.allowedBindings["internal_compose"] = true;
 
-    clean(node);
-    moveNodes(options.view, node);
-
-    const sub = ko.bindingEvent.subscribe(node, "descendantsComplete", descendantsComplete.bind(null, node, vm, options), vm);
-    ko.utils.domData.set(node, "kospa_complete", sub);
-
-    ko.applyBindingsToDescendants(vm, node);
-    ko.utils.domData.set(node, "kospa_vm", vm);
-
-    return bindingComplete(node, vm, options);
+function applyBindings(node: Node, oldVm: ViewModel | null | undefined, vm: ViewModel, options: CompositionLoadedOptions): void {
+    ko.applyBindingAccessorsToNode(node, { internal_compose: () => ({ oldVm, options }) }, vm);
 }
 
 function dispose(node: Node): void {
@@ -215,6 +229,7 @@ function dispose(node: Node): void {
 }
 
 function clean(node: Node): void {
+    ko.cleanNode(node);
     ko.virtualElements.emptyNode(node);
 }
 
