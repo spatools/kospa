@@ -3,10 +3,10 @@ export type ViewLocator = (view: string) => string;
 export type ModuleLoader = (module: string) => Promise<any>;
 export type ViewLoader = (view: string) => Promise<string>;
 
-const define = (this as any).define;
-const req = (this as any).require;
-const module = (this as any).module;
-const System = (this as any).System;
+const define = (window as any).define;
+const req = (window as any).require;
+const module = (window as any).module;
+const System = (window as any).System;
 
 const IS_AMD = (typeof define === "function" && define.amd);
 const IS_COMMONJS = (typeof module === "object" && module.exports);
