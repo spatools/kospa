@@ -229,7 +229,9 @@ function dispose(node: Node): void {
 }
 
 function clean(node: Node): void {
-    ko.cleanNode(node);
+    const sub = ko.utils.domData.get<ko.Subscription>(node, "kospa_complete");
+    if (sub) sub.dispose();
+
     ko.virtualElements.emptyNode(node);
 }
 
