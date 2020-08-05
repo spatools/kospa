@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/spatools/kospa/compare/@kospa/base@0.2.1...@kospa/base@0.2.2) (2020-08-05)
+
+
+### Bug Fixes
+
+* **base:** composer should not clean root node ([edf31ba](https://github.com/spatools/kospa/commit/edf31ba5783f3f39ee5a582a86ce24dbb6bb0d9c))
+
+
+
+
+
 ## [0.2.1](https://github.com/spatools/kospa/compare/@kospa/base@0.2.0...@kospa/base@0.2.1) (2020-08-05)
 
 
