@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.3](https://github.com/spatools/kospa/compare/@kospa/base@0.2.2...@kospa/base@0.2.3) (2020-09-29)
+
+
+### Bug Fixes
+
+* **base:** wait for full process before resolving compose promise ([2de1306](https://github.com/spatools/kospa/commit/2de13060d8f41040d0ccecb56710d0120fa4d7b0))
+
+
+
+
+
 ## [0.2.2](https://github.com/spatools/kospa/compare/@kospa/base@0.2.1...@kospa/base@0.2.2) (2020-08-05)
 
 
