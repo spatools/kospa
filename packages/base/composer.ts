@@ -161,8 +161,7 @@ function activation(node: Node, options: CompositionLoadedOptions): Promise<void
             oldVm = ko.utils.domData.get<ViewModel>(node, "kospa_vm"),
             vm = activator.constructs(options.viewmodel);
 
-        applyBindings(node, oldVm, vm, options);
-        return Promise.resolve();
+        return applyBindings(node, oldVm, vm, options);
     }
 
     return deactivateNode(node, options.viewmodel)
@@ -185,7 +184,7 @@ function deactivateNode(node: Node, newVm: ViewModelOrConstructor): Promise<View
 
 ko.bindingHandlers["internal_compose"] = {
     init(node, valueAccessor, allBindings, vm, bindingContext) {
-        const { oldVm, options } = valueAccessor();
+        const { oldVm, options, resolve, reject } = valueAccessor();
 
         if (oldVm === vm) {
             return { controlsDescendantBindings: true };
@@ -200,21 +199,29 @@ ko.bindingHandlers["internal_compose"] = {
 
         const ctx = ko.bindingEvent.startPossiblyAsyncContentBinding(node, bindingContext);
 
-        const sub = ko.bindingEvent.subscribe(node, "descendantsComplete", descendantsComplete.bind(null, node, vm, options), vm);
+        const sub = ko.bindingEvent.subscribe(node, "descendantsComplete", onDescendantsComplete, vm);
         ko.utils.domData.set(node, "kospa_complete", sub);
 
         ko.applyBindingsToDescendants(ctx, node);
         ko.utils.domData.set(node, "kospa_vm", vm);
 
         bindingComplete(node, vm, options);
+
         return { controlsDescendantBindings: true };
+
+        function onDescendantsComplete(): void {
+            descendantsComplete(node, vm, options)
+                .then(resolve, reject);
+        }
     }
 };
 
 ko.virtualElements.allowedBindings["internal_compose"] = true;
 
-function applyBindings(node: Node, oldVm: ViewModel | null | undefined, vm: ViewModel, options: CompositionLoadedOptions): void {
-    ko.applyBindingAccessorsToNode(node, { internal_compose: () => ({ oldVm, options }) }, vm);
+function applyBindings(node: Node, oldVm: ViewModel | null | undefined, vm: ViewModel, options: CompositionLoadedOptions): Promise<void> {
+    return new Promise((resolve, reject) => {
+        ko.applyBindingAccessorsToNode(node, { internal_compose: () => ({ oldVm, options, resolve, reject }) }, vm);
+    });
 }
 
 function dispose(node: Node): void {
