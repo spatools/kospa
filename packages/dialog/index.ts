@@ -166,7 +166,7 @@ class TemplateViewModel {
         this._title = options.title;
     }
 
-    public bindingComplete(container: HTMLElement, options: DialogOptions): void | Promise<void> {
+    public descendantsComplete(container: HTMLElement, options: DialogOptions): void | Promise<void> {
         const node = container.getElementsByTagName("dialog-content")[0];
         if (node) {
             return composer.compose(node, options)
