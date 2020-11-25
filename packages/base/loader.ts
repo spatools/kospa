@@ -83,7 +83,7 @@ function importAMD(module: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         try {
             // @ts-ignore
-            require([module], ([mod]: any[]) => { resolve(mod); }, (err: Error) => { reject(err); });
+            require([module], (mod: any) => { resolve(mod); }, (err: Error) => { reject(err); });
         }
         catch (e) {
             reject(e);
