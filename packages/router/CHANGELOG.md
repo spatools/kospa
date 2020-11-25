@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.11](https://github.com/spatools/kospa/compare/@kospa/router@0.1.10...@kospa/router@0.1.11) (2020-11-25)
+
+**Note:** Version bump only for package @kospa/router
+
+
+
+
+
 ## [0.1.10](https://github.com/spatools/kospa/compare/@kospa/router@0.1.9...@kospa/router@0.1.10) (2020-11-25)
 
 **Note:** Version bump only for package @kospa/router
