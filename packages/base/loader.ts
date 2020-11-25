@@ -1,15 +1,14 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-var-requires */
 export type ModuleLocator = (module: string) => string;
 export type ViewLocator = (view: string) => string;
 export type ModuleLoader = (module: string) => Promise<any>;
 export type ViewLoader = (view: string) => Promise<string>;
 
-const define = (window as any).define;
-const req = (window as any).require;
-const module = (window as any).module;
-const System = (window as any).System;
-
+// @ts-ignore
 const IS_AMD = (typeof define === "function" && define.amd);
+// @ts-ignore
 const IS_COMMONJS = (typeof module === "object" && module.exports);
+// @ts-ignore
 const IS_SYSTEMJS = (typeof System === "object" && typeof System.import === "function");
 
 export let moduleLocator: ModuleLocator = defaultModuleLocator;
@@ -83,11 +82,8 @@ function defaultViewLoader(view: string): Promise<string> {
 function importAMD(module: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         try {
-            req(
-                [module],
-                (...mods: any[]) => { resolve(mods[0]); },
-                (err: Error) => { reject(err); }
-            );
+            // @ts-ignore
+            require([module], ([mod]: any[]) => { resolve(mod); }, (err: Error) => { reject(err); });
         }
         catch (e) {
             reject(e);
@@ -98,7 +94,8 @@ function importAMD(module: string): Promise<any> {
 function importCommonJS(module: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         try {
-            resolve(req(module)); // eslint-disable-line
+            // @ts-ignore
+            resolve(require(module));
         }
         catch (e) {
             reject(e);
@@ -107,6 +104,7 @@ function importCommonJS(module: string): Promise<any> {
 }
 
 function importSystemJS(module: string): Promise<any> {
+    // @ts-ignore
     return System.import(module);
 }
 
