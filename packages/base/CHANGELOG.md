@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.4](https://github.com/spatools/kospa/compare/@kospa/base@0.2.3...@kospa/base@0.2.4) (2020-11-25)
+
+
+### Bug Fixes
+
+* use local importers ([cfb48c6](https://github.com/spatools/kospa/commit/cfb48c65b70c6ae0a95a0e497984ccd66359bf91))
+
+
+
+
+
 ## [0.2.3](https://github.com/spatools/kospa/compare/@kospa/base@0.2.2...@kospa/base@0.2.3) (2020-09-29)
 
 
