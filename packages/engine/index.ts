@@ -225,5 +225,6 @@ export default defaultInstance;
 
 function parseMarkup(markup: string): Element {
     const parser = new DOMParser();
-    return parser.parseFromString(markup, "text/html").body;
+    const doc = parser.parseFromString(`<div>${markup}</div>`, "text/html");
+    return doc.body.children[0];
 }
