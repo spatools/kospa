@@ -1,6 +1,6 @@
 {
   "name": "@kospa/engine",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Template Engine component for kospa framework",
   "homepage": "https://github.com/spatools/kospa",
   "author": "Touchify (dev@touchify.co)",
