@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/spatools/kospa/compare/@kospa/router@0.1.11...@kospa/router@0.2.0) (2020-12-18)
+
+
+### Features
+
+* **router:** allow middlewares to stop the pipeline by returning false ([e1ce451](https://github.com/spatools/kospa/commit/e1ce4510689977c44b6a9582f6054b53a4c6e4d2))
+
+
+
+
+
 ## [0.1.11](https://github.com/spatools/kospa/compare/@kospa/router@0.1.10...@kospa/router@0.1.11) (2020-11-25)
 
 **Note:** Version bump only for package @kospa/router
