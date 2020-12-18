@@ -352,19 +352,26 @@ function createRouteRegExp(route: string): RegExp {
     return new RegExp("^" + route + "$");
 }
 
-function executeHandlers(handlers: RouteHandler[], args: any[] = []): Promise<any> {
-    const len = handlers.length;
-    let p = Promise.resolve(),
-        i = 0;
+function executeHandlers(_handlers: RouteHandler[], args: any[] = []): Promise<any> {
+    const handlers = _handlers.slice();
+    return next();
 
-    for (; i < len; i++) {
-        p = p.then(executeHandler.bind(null, handlers[i], args));
+    function next(): Promise<boolean | void> {
+        const handler = handlers.shift();
+        if (!handler) {
+            return Promise.resolve();
+        }
+
+        return Promise.resolve()
+            .then(() => handler(...args))
+            .then(res => {
+                if (res === false) {
+                    return false;
+                }
+
+                return next();
+            });
     }
-
-    return p;
-}
-function executeHandler(handler: RouteHandler, args: any[]): any {
-    return handler(...args);
 }
 
 function baseNotFound(): any {
